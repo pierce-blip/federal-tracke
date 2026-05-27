@@ -1,0 +1,408 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Federal Investment Tracker</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=Syne:wght@600;700&family=Inter:wght@400;500&display=swap');
+  :root {
+    --bg:#0a0a0f; --bg2:#111118; --bg3:#18181f;
+    --border:rgba(255,255,255,0.08); --border2:rgba(255,255,255,0.14);
+    --text:#e8e8f0; --muted:#7070a0;
+    --accent:#7c6af7; --accent2:#a89ff9;
+    --green:#3dd68c; --green-bg:rgba(61,214,140,0.1);
+    --red:#f06b6b; --red-bg:rgba(240,107,107,0.1);
+    --amber:#f0a86b; --amber-bg:rgba(240,168,107,0.1);
+    --blue:#6baff0; --blue-bg:rgba(107,175,240,0.1);
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;font-size:14px;line-height:1.6}
+  header{border-bottom:1px solid var(--border);padding:18px 28px;display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;position:sticky;top:0;background:var(--bg);z-index:100}
+  .logo{display:flex;align-items:center;gap:11px}
+  .logo-icon{width:34px;height:34px;background:var(--accent);border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:16px}
+  h1{font-family:'Syne',sans-serif;font-size:16px;font-weight:700;color:var(--text);letter-spacing:-0.02em}
+  .subtitle{font-size:11px;color:var(--muted);margin-top:1px}
+  .header-right{display:flex;align-items:center;gap:10px}
+  .status{display:flex;align-items:center;gap:6px;font-size:11px;color:var(--muted);font-family:'IBM Plex Mono',monospace}
+  .dot{width:6px;height:6px;border-radius:50%;background:var(--green);animation:pulse 2s infinite}
+  .dot.loading{background:var(--amber);animation:pulse 0.7s infinite}
+  .dot.error{background:var(--red);animation:none}
+  @keyframes pulse{0%,100%{opacity:1}50%{opacity:0.35}}
+  .btn{padding:7px 14px;border-radius:8px;border:1px solid var(--border2);background:var(--bg3);color:var(--text);font-size:12px;cursor:pointer;font-family:'Inter',sans-serif;transition:all 0.15s;display:inline-flex;align-items:center;gap:6px}
+  .btn:hover{border-color:var(--accent);color:var(--accent2)}
+  .btn:active{transform:scale(0.97)}
+  main{padding:20px 28px;max-width:1500px;margin:0 auto}
+  .stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:10px;margin-bottom:16px}
+  .stat{background:var(--bg2);border:1px solid var(--border);border-radius:10px;padding:12px 14px}
+  .stat-label{font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:0.06em;margin-bottom:5px}
+  .stat-value{font-family:'Syne',sans-serif;font-size:24px;font-weight:700;color:var(--text)}
+  .stat-value.green{color:var(--green)}.stat-value.red{color:var(--red)}.stat-value.amber{color:var(--amber)}
+  .alert-banner{background:var(--amber-bg);border:1px solid rgba(240,168,107,0.3);border-radius:10px;padding:11px 15px;margin-bottom:14px;font-size:13px;color:var(--amber);display:flex;align-items:flex-start;gap:10px}
+  .alert-link{color:var(--amber);text-decoration:underline;cursor:pointer}
+  .toolbar{display:flex;gap:8px;margin-bottom:14px;flex-wrap:wrap;align-items:center}
+  .toolbar input,.toolbar select{background:var(--bg2);border:1px solid var(--border);border-radius:8px;color:var(--text);font-size:12px;padding:6px 10px;height:32px;font-family:'Inter',sans-serif;outline:none;transition:border-color 0.15s}
+  .toolbar input:focus,.toolbar select:focus{border-color:var(--accent)}
+  .toolbar select option{background:var(--bg2)}
+  #srch{flex:1;min-width:200px}
+  .table-wrap{overflow-x:auto;border:1px solid var(--border);border-radius:12px}
+  table{width:100%;border-collapse:collapse;font-size:12px}
+  thead{background:var(--bg2)}
+  th{text-align:left;padding:10px 12px;font-size:10px;font-weight:500;color:var(--muted);text-transform:uppercase;letter-spacing:0.06em;border-bottom:1px solid var(--border);white-space:nowrap;cursor:pointer;user-select:none}
+  th:hover{color:var(--text)}
+  td{padding:11px 12px;border-bottom:1px solid var(--border);vertical-align:top;color:var(--text)}
+  tr:last-child td{border-bottom:none}
+  tbody tr:hover td{background:rgba(124,106,247,0.04)}
+  .nm{font-weight:500;font-size:13px}
+  .sub{font-size:11px;color:var(--muted);margin-top:2px;line-height:1.45}
+  .committee{font-size:11px;color:var(--accent2);margin-top:3px}
+  .ticker{font-family:'IBM Plex Mono',monospace;font-size:13px;font-weight:500;color:var(--accent2)}
+  .co-name{font-size:11px;color:var(--muted);margin-top:2px}
+  .co-sector{font-size:11px;color:var(--accent2);margin-top:3px}
+  .co-desc{font-size:11px;color:var(--muted);margin-top:3px;line-height:1.4;max-width:200px}
+  .badge{display:inline-flex;align-items:center;gap:3px;font-size:10px;font-weight:500;padding:2px 7px;border-radius:99px;white-space:nowrap}
+  .b-buy{background:var(--green-bg);color:var(--green)}
+  .b-sell{background:var(--red-bg);color:var(--red)}
+  .b-typical{background:rgba(61,214,140,0.08);color:var(--green)}
+  .b-large{background:var(--amber-bg);color:var(--amber)}
+  .b-huge{background:var(--red-bg);color:var(--red)}
+  .b-gray{background:rgba(112,112,160,0.15);color:var(--muted)}
+  .b-overlap-none{background:rgba(61,214,140,0.08);color:var(--green)}
+  .b-overlap-possible{background:var(--amber-bg);color:var(--amber)}
+  .b-overlap-direct{background:var(--red-bg);color:var(--red)}
+  .amount{font-family:'IBM Plex Mono',monospace;font-size:12px;font-weight:500}
+  .scale-bar{height:3px;border-radius:2px;background:rgba(255,255,255,0.07);margin-top:5px}
+  .scale-fill{height:3px;border-radius:2px}
+  .mult{font-size:10px;color:var(--muted);margin-top:2px;font-family:'IBM Plex Mono',monospace}
+  .days-ok{color:var(--green);font-family:'IBM Plex Mono',monospace;font-size:13px;font-weight:500}
+  .days-warn{color:var(--amber);font-family:'IBM Plex Mono',monospace;font-size:13px;font-weight:500}
+  .days-bad{color:var(--red);font-family:'IBM Plex Mono',monospace;font-size:13px;font-weight:500}
+  .insider-hit{color:var(--amber);font-weight:500;font-size:11px}
+  .insider-clear{color:var(--muted);font-size:11px}
+  .insider-pending{color:var(--muted);font-style:italic;font-size:11px}
+  .overlap-reason{font-size:10px;color:var(--muted);margin-top:3px;line-height:1.4;max-width:150px}
+  .loading-state{text-align:center;padding:60px;color:var(--muted)}
+  .spinner{width:28px;height:28px;border:2px solid var(--border2);border-top-color:var(--accent);border-radius:50%;animation:spin 0.8s linear infinite;margin:0 auto 14px}
+  @keyframes spin{to{transform:rotate(360deg)}}
+  .error-state{text-align:center;padding:60px;color:var(--red);line-height:2}
+  .legend{display:flex;gap:12px;flex-wrap:wrap;margin-bottom:14px;align-items:center;font-size:11px;color:var(--muted)}
+  .source-tag{display:inline-flex;align-items:center;gap:5px;font-size:10px;color:var(--muted);background:var(--bg3);border:1px solid var(--border);border-radius:6px;padding:3px 8px;font-family:'IBM Plex Mono',monospace}
+  footer{border-top:1px solid var(--border);padding:14px 28px;font-size:11px;color:var(--muted);display:flex;justify-content:space-between;flex-wrap:wrap;gap:8px;margin-top:36px}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="logo">
+    <div class="logo-icon">⚖</div>
+    <div>
+      <h1>Federal Investment Tracker</h1>
+      <div class="subtitle">STOCK Act filings · SEC Form 4 insider match · Committee overlap · Live data</div>
+    </div>
+  </div>
+  <div class="header-right">
+    <div class="status"><span class="dot loading" id="status-dot"></span><span id="status-text">Loading…</span></div>
+    <button class="btn" onclick="init()">↻ Refresh</button>
+  </div>
+</header>
+
+<main>
+  <div id="alert-area"></div>
+
+  <div class="stats">
+    <div class="stat"><div class="stat-label">Trades this week</div><div class="stat-value" id="s-total">—</div></div>
+    <div class="stat"><div class="stat-label">Buys</div><div class="stat-value green" id="s-buys">—</div></div>
+    <div class="stat"><div class="stat-label">Sells</div><div class="stat-value red" id="s-sells">—</div></div>
+    <div class="stat"><div class="stat-label">Insider matches</div><div class="stat-value amber" id="s-ins">—</div></div>
+    <div class="stat"><div class="stat-label">Direct overlap</div><div class="stat-value red" id="s-overlap">—</div></div>
+    <div class="stat"><div class="stat-label">High concern</div><div class="stat-value red" id="s-hi">—</div></div>
+  </div>
+
+  <div class="legend">
+    <span style="font-size:11px;color:var(--muted);font-weight:500;margin-right:2px">Overlap:</span>
+    <span style="display:flex;align-items:center;gap:5px"><span class="badge b-overlap-none">✓ None</span> No committee link</span>
+    <span style="display:flex;align-items:center;gap:5px"><span class="badge b-overlap-possible">~ Possible</span> Related industry</span>
+    <span style="display:flex;align-items:center;gap:5px"><span class="badge b-overlap-direct">⚠ Direct</span> Committee oversees this sector</span>
+  </div>
+
+  <div class="toolbar">
+    <input type="text" id="srch" placeholder="Search name, ticker, company, sector, committee…" oninput="applyFilters()">
+    <select id="f-chamber" onchange="applyFilters()"><option value="">House & Senate</option><option value="House">House</option><option value="Senate">Senate</option></select>
+    <select id="f-party" onchange="applyFilters()"><option value="">All parties</option><option value="D">Democrat</option><option value="R">Republican</option></select>
+    <select id="f-type" onchange="applyFilters()"><option value="">Buy & sell</option><option value="purchase">Buys only</option><option value="sale">Sells only</option></select>
+    <select id="f-sector" onchange="applyFilters()"><option value="">All sectors</option></select>
+    <select id="f-overlap" onchange="applyFilters()"><option value="">All overlaps</option><option value="direct">Direct overlap</option><option value="possible">Possible overlap</option></select>
+    <select id="f-flag" onchange="applyFilters()"><option value="">All trades</option><option value="insider">Insider match</option><option value="high">High concern</option></select>
+  </div>
+
+  <div class="table-wrap">
+    <table>
+      <thead><tr>
+        <th onclick="sortBy('name')">Member ↕</th>
+        <th onclick="sortBy('ticker')">Ticker / Company ↕</th>
+        <th>Type</th>
+        <th onclick="sortBy('amountMin')">Amount ↕</th>
+        <th onclick="sortBy('mult')">Vs avg ↕</th>
+        <th onclick="sortBy('daysToDisclose')">Days to disclose ↕</th>
+        <th>Overlap flag</th>
+        <th>Insider match</th>
+      </tr></thead>
+      <tbody id="tbody">
+        <tr><td colspan="8"><div class="loading-state"><div class="spinner"></div>Fetching congressional trades…</div></td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div style="margin-top:14px;display:flex;gap:8px;flex-wrap:wrap">
+    <span class="source-tag">🏛 Senate EFDS</span>
+    <span class="source-tag">🏛 House Clerk</span>
+    <span class="source-tag">📈 SEC EDGAR Form 4</span>
+    <span class="source-tag">🔑 Congress.gov API</span>
+    <span class="source-tag">📊 Financial Modeling Prep</span>
+  </div>
+</main>
+
+<footer>
+  <span>Federal Investment Tracker · Public government data only · Not financial or legal advice</span>
+  <span>STOCK Act allows up to 45-day reporting lag — disclosed date ≠ trade date</span>
+</footer>
+
+<script>
+let allTrades = [], sortKey = 'daysToDisclose', sortDir = -1;
+
+const COMMITTEE_SECTORS = {
+  'armed services':['Aerospace & Defense','Defense'],
+  'defense':['Aerospace & Defense','Defense'],
+  'banking':['Financial Services','Banks','Insurance'],
+  'finance':['Financial Services','Banks','Insurance','Capital Markets'],
+  'financial services':['Financial Services','Banks','Insurance'],
+  'energy':['Energy','Oil & Gas','Utilities'],
+  'natural resources':['Energy','Oil & Gas','Mining'],
+  'health':['Healthcare','Biotechnology','Pharmaceuticals','Medical Devices'],
+  'intelligence':['Government','Technology','Defense'],
+  'commerce':['Technology','Retail','Communications','Industrials'],
+  'technology':['Technology','Software','Semiconductors'],
+  'agriculture':['Agriculture','Food','Consumer Staples'],
+  'transportation':['Industrials','Airlines','Automotive'],
+  'judiciary':['Legal','Government'],
+};
+
+function getOverlap(committee, sector) {
+  if (!committee || !sector) return { level:'none', reason:'No committee data' };
+  const c = committee.toLowerCase();
+  let matched = [];
+  for (const [k,v] of Object.entries(COMMITTEE_SECTORS)) {
+    if (c.includes(k)) { matched = v; break; }
+  }
+  if (!matched.length) return { level:'none', reason:'No known overlap' };
+  const s = sector.toLowerCase();
+  if (matched.some(m => s.includes(m.toLowerCase()) || m.toLowerCase().includes(s))) {
+    return { level:'direct', reason:`Committee oversees ${sector}` };
+  }
+  return { level:'possible', reason:'Related to committee scope' };
+}
+
+function fmtAmt(min, max) {
+  const f = n => n>=1e6?'$'+(n/1e6).toFixed(1)+'M':n>=1000?'$'+Math.round(n/1000)+'K':'$'+n;
+  return min===max?f(min):f(min)+'–'+f(max);
+}
+
+function scaleInfo(t) {
+  const mid = (t.amountMin+t.amountMax)/2;
+  const avg = ((t.historicalAvgMin||1000)+(t.historicalAvgMax||15000))/2;
+  const mult = avg>0?mid/avg:1;
+  let label,cls,fillColor;
+  if (mult<1.5){label='Typical';cls='b-typical';fillColor='#3dd68c';}
+  else if (mult<3){label='Large';cls='b-large';fillColor='#f0a86b';}
+  else{label='Unusually large';cls='b-huge';fillColor='#f06b6b';}
+  return{mult:parseFloat(mult.toFixed(1)),label,cls,fillColor,pct:Math.min(100,Math.round((mult/5)*100))};
+}
+
+function daysClass(d) {
+  if (d===null) return 'days-ok';
+  if (d<=14) return 'days-ok';
+  if (d<=30) return 'days-warn';
+  return 'days-bad';
+}
+
+function renderRows(trades) {
+  const tbody = document.getElementById('tbody');
+  if (!trades.length) {
+    tbody.innerHTML='<tr><td colspan="8"><div class="loading-state">No trades match the current filters.</div></td></tr>';
+    return;
+  }
+  tbody.innerHTML = trades.map(t => {
+    const sc = scaleInfo(t);
+    const dc = daysClass(t.daysToDisclose);
+    const ins = t._insider;
+    let insHtml;
+    if (!ins) insHtml='<span class="insider-pending">Checking EDGAR…</span>';
+    else if (ins.found && ins.insiders && ins.insiders.length) {
+      const top = ins.insiders[0];
+      insHtml=`<div class="insider-hit">⚠ ${top.action}</div><div class="sub">${top.name}<br>${top.date}</div>`;
+    } else insHtml='<span class="insider-clear">✓ No match</span>';
+
+    const ov = t._overlap||{level:'none',reason:'Loading…'};
+    const ovClass = ov.level==='direct'?'b-overlap-direct':ov.level==='possible'?'b-overlap-possible':'b-overlap-none';
+    const ovLabel = ov.level==='direct'?'⚠ Direct':ov.level==='possible'?'~ Possible':'✓ None';
+
+    return `<tr>
+      <td>
+        <div class="nm">${t.name}</div>
+        <div class="sub">${t.chamber} · ${t.party||'?'} · ${t.state||''}</div>
+        ${t.committee?`<div class="committee">${t.committee}</div>`:''}
+      </td>
+      <td>
+        <div class="ticker">${t.ticker}</div>
+        <div class="co-name">${t.company||''}</div>
+        ${t._info?`<div class="co-sector">${t._info.sector||''}${t._info.industry?' · '+t._info.industry:''}</div>`:''}
+        ${t._info&&t._info.description?`<div class="co-desc">${t._info.description}</div>`:''}
+      </td>
+      <td><span class="badge ${t.tradeType==='purchase'?'b-buy':'b-sell'}">${t.tradeType==='purchase'?'▲ Buy':'▼ Sell'}</span></td>
+      <td><div class="amount">${fmtAmt(t.amountMin,t.amountMax)}</div></td>
+      <td>
+        <span class="badge ${sc.cls}">${sc.label}</span>
+        <div class="scale-bar"><div class="scale-fill" style="width:${sc.pct}%;background:${sc.fillColor}"></div></div>
+        <div class="mult">${sc.mult}× avg</div>
+      </td>
+      <td>
+        <div class="${dc}">${t.daysToDisclose!==null?t.daysToDisclose+'d':'—'}</div>
+        <div class="sub">${t.tradeDate||''}<br>→ ${t.disclosedDate||''}</div>
+        ${t.daysToDisclose!==null&&t.daysToDisclose>30?'<div class="sub" style="color:var(--red);margin-top:2px">Near 45d limit</div>':''}
+      </td>
+      <td>
+        <span class="badge ${ovClass}">${ovLabel}</span>
+        <div class="overlap-reason">${ov.reason}</div>
+      </td>
+      <td>${insHtml}</td>
+    </tr>`;
+  }).join('');
+}
+
+function populateSectors() {
+  const sectors = [...new Set(allTrades.map(t=>t._info&&t._info.sector).filter(Boolean))].sort();
+  const sel = document.getElementById('f-sector');
+  sel.innerHTML = '<option value="">All sectors</option>'+sectors.map(s=>`<option value="${s}">${s}</option>`).join('');
+}
+
+function updateStats() {
+  document.getElementById('s-total').textContent = allTrades.length;
+  document.getElementById('s-buys').textContent = allTrades.filter(t=>t.tradeType==='purchase').length;
+  document.getElementById('s-sells').textContent = allTrades.filter(t=>t.tradeType==='sale').length;
+  document.getElementById('s-ins').textContent = allTrades.filter(t=>t._insider&&t._insider.found).length;
+  document.getElementById('s-overlap').textContent = allTrades.filter(t=>t._overlap&&t._overlap.level==='direct').length;
+  const hi = allTrades.filter(t=>t._insider&&t._insider.found&&t._overlap&&t._overlap.level==='direct'&&scaleInfo(t).mult>=2);
+  document.getElementById('s-hi').textContent = hi.length;
+  const area = document.getElementById('alert-area');
+  area.innerHTML = hi.length
+    ? `<div class="alert-banner">⚠ <div><strong>${hi.length} high-concern trade${hi.length>1?'s':''}</strong> — direct committee overlap + insider match + large amount. <span class="alert-link" onclick="document.getElementById('f-flag').value='high';applyFilters()">Show only →</span></div></div>`
+    : '';
+}
+
+function applyFilters() {
+  const srch = document.getElementById('srch').value.toLowerCase();
+  const party = document.getElementById('f-party').value;
+  const type = document.getElementById('f-type').value;
+  const flag = document.getElementById('f-flag').value;
+  const chamber = document.getElementById('f-chamber').value;
+  const sector = document.getElementById('f-sector').value;
+  const overlap = document.getElementById('f-overlap').value;
+
+  let filtered = allTrades.filter(t => {
+    if (srch && !(t.name||'').toLowerCase().includes(srch)
+      && !(t.ticker||'').toLowerCase().includes(srch)
+      && !(t.company||'').toLowerCase().includes(srch)
+      && !(t._info&&(t._info.sector||'').toLowerCase().includes(srch))
+      && !(t._info&&(t._info.industry||'').toLowerCase().includes(srch))
+      && !(t.committee||'').toLowerCase().includes(srch)) return false;
+    if (party && !(t.party||'').includes(party)) return false;
+    if (type && t.tradeType!==type) return false;
+    if (chamber && t.chamber!==chamber) return false;
+    if (sector && !(t._info&&t._info.sector===sector)) return false;
+    if (overlap && !(t._overlap&&t._overlap.level===overlap)) return false;
+    if (flag==='insider' && !(t._insider&&t._insider.found)) return false;
+    if (flag==='high' && !(t._insider&&t._insider.found&&t._overlap&&t._overlap.level==='direct'&&scaleInfo(t).mult>=2)) return false;
+    return true;
+  });
+
+  filtered.sort((a,b) => {
+    let av=a[sortKey]??0, bv=b[sortKey]??0;
+    if (sortKey==='mult'){av=scaleInfo(a).mult;bv=scaleInfo(b).mult;}
+    if (typeof av==='string') return av.localeCompare(bv)*sortDir;
+    return (av-bv)*sortDir;
+  });
+
+  renderRows(filtered);
+}
+
+function sortBy(key) {
+  sortKey===key?sortDir*=-1:(sortKey=key,sortDir=-1);
+  applyFilters();
+}
+
+function setStatus(state, text) {
+  document.getElementById('status-dot').className='dot '+state;
+  document.getElementById('status-text').textContent=text;
+}
+
+async function api(path) {
+  const r = await fetch(path);
+  if (!r.ok) throw new Error(`${path} returned ${r.status}`);
+  return r.json();
+}
+
+async function init() {
+  setStatus('loading','Fetching live data…');
+  document.getElementById('tbody').innerHTML='<tr><td colspan="8"><div class="loading-state"><div class="spinner"></div>Connecting to Senate EFDS…</div></td></tr>';
+  document.getElementById('alert-area').innerHTML='';
+  allTrades=[];
+
+  try {
+    const { trades } = await api('/api/trades');
+    allTrades = trades.map(t=>({...t,historicalAvgMin:1000,historicalAvgMax:15000,_insider:null,_info:null,_overlap:null}));
+    applyFilters();
+    updateStats();
+    setStatus('live','Live · Updated '+new Date().toLocaleTimeString());
+
+    for (let i=0; i<allTrades.length; i++) {
+      const t = allTrades[i];
+
+      api(`/api/member?name=${encodeURIComponent(t.name)}`).then(({member})=>{
+        if (member) {
+          allTrades[i].party = member.partyName?member.partyName[0]:'?';
+          allTrades[i].state = member.state||allTrades[i].state;
+          if (member.terms&&member.terms.item&&member.terms.item.length) {
+            const lat = member.terms.item[member.terms.item.length-1];
+            allTrades[i].committee = lat.chamber||'';
+          }
+        }
+        allTrades[i]._overlap = getOverlap(allTrades[i].committee, allTrades[i]._info?.sector||'');
+        applyFilters(); updateStats();
+      }).catch(()=>{});
+
+      if (t.ticker && t.ticker!=='N/A') {
+        api(`/api/ticker?ticker=${encodeURIComponent(t.ticker)}`).then(({info})=>{
+          allTrades[i]._info = info;
+          allTrades[i]._overlap = getOverlap(allTrades[i].committee, info?.sector||'');
+          populateSectors(); applyFilters(); updateStats();
+        }).catch(()=>{});
+
+        api(`/api/insider?ticker=${encodeURIComponent(t.ticker)}&date=${encodeURIComponent(t.tradeDate||new Date().toISOString().split('T')[0])}`).then(data=>{
+          allTrades[i]._insider = data;
+          applyFilters(); updateStats();
+        }).catch(()=>{ allTrades[i]._insider={found:false,insiders:[]}; });
+      } else {
+        allTrades[i]._insider = {found:false,insiders:[]};
+        allTrades[i]._overlap = {level:'none',reason:'No ticker'};
+      }
+    }
+  } catch(e) {
+    setStatus('error','Error loading data');
+    document.getElementById('tbody').innerHTML=`<tr><td colspan="8"><div class="error-state">⚠ Could not load trade data<br><small style="color:var(--muted)">${e.message}</small><br><br><button class="btn" onclick="init()">↻ Try again</button></div></td></tr>`;
+  }
+}
+
+init();
+</script>
+</body>
+</html>
