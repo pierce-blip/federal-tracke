@@ -11,90 +11,77 @@ export default async function handler(req, res) {
   const fromDate = new Date(today - days * 86400000);
   const fmt = d => d.toISOString().split('T')[0];
 
-  try {
-    const [senateRes, houseRes] = await Promise.allSettled([
-      fetch(`https://financialmodelingprep.com/api/v4/senate-trading?page=0&apikey=${FMP_KEY}`),
-      fetch(`https://financialmodelingprep.com/api/v4/house-disclosure?page=0&apikey=${FMP_KEY}`)
-    ]);
+  const endpoints = [
+    { url: `https://financialmodelingprep.com/stable/senate-trading?page=0&apikey=${FMP_KEY}`, chamber: 'Senate' },
+    { url: `https://financialmodelingprep.com/stable/house-trading?page=0&apikey=${FMP_KEY}`, chamber: 'House' },
+    { url: `https://financialmodelingprep.com/api/v4/senate-trading?page=0&apikey=${FMP_KEY}`, chamber: 'Senate' },
+    { url: `https://financialmodelingprep.com/api/v4/house-disclosure?page=0&apikey=${FMP_KEY}`, chamber: 'House' },
+  ];
 
-    let trades = [];
+  let trades = [];
+  const errors = [];
 
-    if (senateRes.status === 'fulfilled' && senateRes.value.ok) {
-      const data = await senateRes.value.json();
-      const senate = Array.isArray(data) ? data : [];
-      trades = [...trades, ...senate.map(t => ({
-        name: t.senator || t.firstName + ' ' + t.lastName || '',
-        chamber: 'Senate',
-        party: t.party || '?',
-        state: t.state || '',
-        committee: t.committee || '',
-        ticker: (t.ticker || 'N/A').toUpperCase(),
-        company: t.assetDescription || t.asset || '',
-        tradeType: (t.type || t.transactionType || '').toLowerCase().includes('sale') ? 'sale' : 'purchase',
-        amountMin: parseAmount(t.amount || t.range || ''),
-        amountMax: parseAmountMax(t.amount || t.range || ''),
-        tradeDate: t.transactionDate || t.tradeDate || '',
-        disclosedDate: t.disclosureDate || t.dateRecieved || '',
-        daysToDisclose: daysBetween(t.transactionDate || t.tradeDate, t.disclosureDate || t.dateRecieved),
-        sector: t.sector || '',
-      }))];
-    }
+  for (const ep of endpoints) {
+    try {
+      const r = await fetch(ep.url, {
+        headers: { 'User-Agent': 'Mozilla/5.0 FederalTracker/1.0', 'Accept': 'application/json' }
+      });
+      if (!r.ok) { errors.push(`${ep.url}: ${r.status}`); continue; }
+      const data = await r.json();
+      const items = Array.isArray(data) ? data : (data.data || data.trades || []);
+      if (!items.length) { errors.push(`${ep.url}: empty`); continue; }
 
-    if (houseRes.status === 'fulfilled' && houseRes.value.ok) {
-      const data = await houseRes.value.json();
-      const house = Array.isArray(data) ? data : [];
-      trades = [...trades, ...house.map(t => ({
-        name: t.representative || t.firstName + ' ' + t.lastName || '',
-        chamber: 'House',
-        party: t.party || '?',
-        state: t.state || '',
-        committee: t.committee || '',
-        ticker: (t.ticker || 'N/A').toUpperCase(),
-        company: t.assetDescription || t.asset || '',
-        tradeType: (t.type || t.transactionType || '').toLowerCase().includes('sale') ? 'sale' : 'purchase',
-        amountMin: parseAmount(t.amount || t.range || ''),
-        amountMax: parseAmountMax(t.amount || t.range || ''),
-        tradeDate: t.transactionDate || t.tradeDate || '',
-        disclosedDate: t.disclosureDate || t.disclosedDate || '',
-        daysToDisclose: daysBetween(t.transactionDate || t.tradeDate, t.disclosureDate || t.disclosedDate),
-        sector: t.sector || '',
-      }))];
-    }
+      const mapped = items.map(t => {
+        const name = t.senator || t.representative || t.name || [t.firstName, t.lastName].filter(Boolean).join(' ') || '';
+        const tradeDate = t.transactionDate || t.tradeDate || t.date || '';
+        const disclosedDate = t.disclosureDate || t.disclosedDate || t.dateRecieved || t.filingDate || '';
+        const typeRaw = (t.type || t.transactionType || t.transaction || '').toLowerCase();
+        return {
+          name,
+          chamber: ep.chamber,
+          party: t.party || '?',
+          state: t.state || t.office || '',
+          committee: t.committee || '',
+          ticker: (t.ticker || t.symbol || 'N/A').toUpperCase().trim(),
+          company: t.assetDescription || t.asset || t.companyName || '',
+          tradeType: typeRaw.includes('sale') || typeRaw.includes('sell') ? 'sale' : 'purchase',
+          amountMin: parseAmount(t.amount || t.range || t.size || ''),
+          amountMax: parseAmountMax(t.amount || t.range || t.size || ''),
+          tradeDate,
+          disclosedDate,
+          daysToDisclose: daysBetween(tradeDate, disclosedDate),
+          sector: t.sector || '',
+        };
+      }).filter(t => t.name.trim().length > 2);
 
-    // Filter by date range
-    trades = trades.filter(t => {
-      const d = t.disclosedDate || t.tradeDate;
-      if (!d) return true;
-      return new Date(d) >= fromDate;
-    });
-
-    // Deduplicate
-    const seen = new Set();
-    trades = trades.filter(t => {
-      const key = `${t.name}-${t.ticker}-${t.tradeDate}-${t.tradeType}`;
-      if (seen.has(key)) return false;
-      seen.add(key);
-      return true;
-    });
-
-    // Sort by disclosed date descending
-    trades.sort((a, b) => {
-      const da = new Date(a.disclosedDate || 0);
-      const db = new Date(b.disclosedDate || 0);
-      return db - da;
-    });
-
-    return res.status(200).json({
-      trades,
-      source: 'fmp',
-      fetchedAt: new Date().toISOString(),
-      fromCache: false,
-      days
-    });
-
-  } catch (e) {
-    return res.status(500).json({ error: e.message, trades: [] });
+      if (mapped.length > 0) {
+        const existing = new Set(trades.map(t => `${t.chamber}-${t.name}-${t.ticker}-${t.tradeDate}`));
+        for (const t of mapped) {
+          const key = `${t.chamber}-${t.name}-${t.ticker}-${t.tradeDate}`;
+          if (!existing.has(key)) { existing.add(key); trades.push(t); }
+        }
+      }
+    } catch(e) { errors.push(`${ep.url}: ${e.message}`); }
   }
+
+  // Filter by date range
+  const filtered = trades.filter(t => {
+    const d = t.disclosedDate || t.tradeDate;
+    if (!d) return true;
+    return new Date(d) >= fromDate;
+  });
+
+  // Sort newest first
+  filtered.sort((a, b) => new Date(b.disclosedDate || 0) - new Date(a.disclosedDate || 0));
+
+  return res.status(200).json({
+    trades: filtered,
+    source: 'fmp',
+    fetchedAt: new Date().toISOString(),
+    fromCache: false,
+    days,
+    debug: errors
+  });
 }
 
 function daysBetween(d1, d2) {
@@ -103,19 +90,14 @@ function daysBetween(d1, d2) {
   if (isNaN(a) || isNaN(b)) return null;
   return Math.round(Math.abs(b - a) / 86400000);
 }
-
 function parseAmount(str) {
   if (!str) return 1001;
-  const clean = str.replace(/[$,]/g, '');
-  const nums = clean.match(/\d+/g);
-  if (!nums) return 1001;
-  return parseInt(nums[0]) || 1001;
+  const nums = str.replace(/[$,]/g, '').match(/\d+/g);
+  return nums ? (parseInt(nums[0]) || 1001) : 1001;
 }
-
 function parseAmountMax(str) {
   if (!str) return 15000;
-  const clean = str.replace(/[$,]/g, '');
-  const nums = clean.match(/\d+/g);
+  const nums = str.replace(/[$,]/g, '').match(/\d+/g);
   if (!nums || nums.length < 2) return parseAmount(str) * 5;
   return parseInt(nums[nums.length - 1]) || 15000;
 }
