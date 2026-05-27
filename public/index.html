@@ -7,14 +7,14 @@
 <style>
   @import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=Syne:wght@600;700&family=Inter:wght@400;500&display=swap');
   :root {
-    --bg:#0a0a0f; --bg2:#111118; --bg3:#18181f;
-    --border:rgba(255,255,255,0.08); --border2:rgba(255,255,255,0.14);
-    --text:#e8e8f0; --muted:#7070a0;
-    --accent:#7c6af7; --accent2:#a89ff9;
-    --green:#3dd68c; --green-bg:rgba(61,214,140,0.1);
-    --red:#f06b6b; --red-bg:rgba(240,107,107,0.1);
-    --amber:#f0a86b; --amber-bg:rgba(240,168,107,0.1);
-    --blue:#6baff0; --blue-bg:rgba(107,175,240,0.1);
+    --bg:#0a0a0f;--bg2:#111118;--bg3:#18181f;
+    --border:rgba(255,255,255,0.08);--border2:rgba(255,255,255,0.14);
+    --text:#e8e8f0;--muted:#7070a0;
+    --accent:#7c6af7;--accent2:#a89ff9;
+    --green:#3dd68c;--green-bg:rgba(61,214,140,0.1);
+    --red:#f06b6b;--red-bg:rgba(240,107,107,0.1);
+    --amber:#f0a86b;--amber-bg:rgba(240,168,107,0.1);
+    --blue:#6baff0;--blue-bg:rgba(107,175,240,0.1);
   }
   *{box-sizing:border-box;margin:0;padding:0}
   body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;font-size:14px;line-height:1.6}
@@ -23,15 +23,23 @@
   .logo-icon{width:34px;height:34px;background:var(--accent);border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:16px}
   h1{font-family:'Syne',sans-serif;font-size:16px;font-weight:700;color:var(--text);letter-spacing:-0.02em}
   .subtitle{font-size:11px;color:var(--muted);margin-top:1px}
-  .header-right{display:flex;align-items:center;gap:10px}
+  .header-right{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
   .status{display:flex;align-items:center;gap:6px;font-size:11px;color:var(--muted);font-family:'IBM Plex Mono',monospace}
   .dot{width:6px;height:6px;border-radius:50%;background:var(--green);animation:pulse 2s infinite}
   .dot.loading{background:var(--amber);animation:pulse 0.7s infinite}
   .dot.error{background:var(--red);animation:none}
+  .dot.cached{background:var(--blue)}
   @keyframes pulse{0%,100%{opacity:1}50%{opacity:0.35}}
   .btn{padding:7px 14px;border-radius:8px;border:1px solid var(--border2);background:var(--bg3);color:var(--text);font-size:12px;cursor:pointer;font-family:'Inter',sans-serif;transition:all 0.15s;display:inline-flex;align-items:center;gap:6px}
   .btn:hover{border-color:var(--accent);color:var(--accent2)}
   .btn:active{transform:scale(0.97)}
+  .date-range-bar{background:var(--bg2);border-bottom:1px solid var(--border);padding:10px 28px;display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+  .date-range-bar label{font-size:12px;color:var(--muted);white-space:nowrap}
+  .range-btns{display:flex;gap:6px;flex-wrap:wrap}
+  .range-btn{padding:4px 12px;border-radius:99px;border:1px solid var(--border);background:transparent;color:var(--muted);font-size:11px;cursor:pointer;font-family:'Inter',sans-serif;transition:all 0.15s}
+  .range-btn:hover{border-color:var(--accent2);color:var(--accent2)}
+  .range-btn.active{background:var(--accent);border-color:var(--accent);color:white}
+  .cache-notice{font-size:11px;color:var(--blue);background:var(--blue-bg);border:1px solid rgba(107,175,240,0.2);border-radius:8px;padding:8px 14px;margin-bottom:14px;display:flex;align-items:center;gap:8px}
   main{padding:20px 28px;max-width:1500px;margin:0 auto}
   .stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:10px;margin-bottom:16px}
   .stat{background:var(--bg2);border:1px solid var(--border);border-radius:10px;padding:12px 14px}
@@ -53,19 +61,15 @@
   td{padding:11px 12px;border-bottom:1px solid var(--border);vertical-align:top;color:var(--text)}
   tr:last-child td{border-bottom:none}
   tbody tr:hover td{background:rgba(124,106,247,0.04)}
-  .nm{font-weight:500;font-size:13px}
-  .sub{font-size:11px;color:var(--muted);margin-top:2px;line-height:1.45}
+  .nm{font-weight:500;font-size:13px}.sub{font-size:11px;color:var(--muted);margin-top:2px;line-height:1.45}
   .committee{font-size:11px;color:var(--accent2);margin-top:3px}
   .ticker{font-family:'IBM Plex Mono',monospace;font-size:13px;font-weight:500;color:var(--accent2)}
   .co-name{font-size:11px;color:var(--muted);margin-top:2px}
   .co-sector{font-size:11px;color:var(--accent2);margin-top:3px}
   .co-desc{font-size:11px;color:var(--muted);margin-top:3px;line-height:1.4;max-width:200px}
   .badge{display:inline-flex;align-items:center;gap:3px;font-size:10px;font-weight:500;padding:2px 7px;border-radius:99px;white-space:nowrap}
-  .b-buy{background:var(--green-bg);color:var(--green)}
-  .b-sell{background:var(--red-bg);color:var(--red)}
-  .b-typical{background:rgba(61,214,140,0.08);color:var(--green)}
-  .b-large{background:var(--amber-bg);color:var(--amber)}
-  .b-huge{background:var(--red-bg);color:var(--red)}
+  .b-buy{background:var(--green-bg);color:var(--green)}.b-sell{background:var(--red-bg);color:var(--red)}
+  .b-typical{background:rgba(61,214,140,0.08);color:var(--green)}.b-large{background:var(--amber-bg);color:var(--amber)}.b-huge{background:var(--red-bg);color:var(--red)}
   .b-gray{background:rgba(112,112,160,0.15);color:var(--muted)}
   .b-overlap-none{background:rgba(61,214,140,0.08);color:var(--green)}
   .b-overlap-possible{background:var(--amber-bg);color:var(--amber)}
@@ -106,11 +110,25 @@
   </div>
 </header>
 
-<main>
-  <div id="alert-area"></div>
+<div class="date-range-bar">
+  <label>Show trades disclosed in the last:</label>
+  <div class="range-btns">
+    <button class="range-btn" onclick="setRange(7,this)">7 days</button>
+    <button class="range-btn active" onclick="setRange(30,this)">30 days</button>
+    <button class="range-btn" onclick="setRange(60,this)">60 days</button>
+    <button class="range-btn" onclick="setRange(90,this)">90 days</button>
+    <button class="range-btn" onclick="setRange(180,this)">6 months</button>
+    <button class="range-btn" onclick="setRange(365,this)">1 year</button>
+  </div>
+</div>
 
+<main>
+  <div id="cache-notice" style="display:none" class="cache-notice">
+    ℹ Showing cached data — no new filings found for this period. Last fetched: <span id="cache-age"></span>
+  </div>
+  <div id="alert-area"></div>
   <div class="stats">
-    <div class="stat"><div class="stat-label">Trades this week</div><div class="stat-value" id="s-total">—</div></div>
+    <div class="stat"><div class="stat-label">Trades shown</div><div class="stat-value" id="s-total">—</div></div>
     <div class="stat"><div class="stat-label">Buys</div><div class="stat-value green" id="s-buys">—</div></div>
     <div class="stat"><div class="stat-label">Sells</div><div class="stat-value red" id="s-sells">—</div></div>
     <div class="stat"><div class="stat-label">Insider matches</div><div class="stat-value amber" id="s-ins">—</div></div>
@@ -152,10 +170,9 @@
       </tbody>
     </table>
   </div>
-
   <div style="margin-top:14px;display:flex;gap:8px;flex-wrap:wrap">
     <span class="source-tag">🏛 Senate EFDS</span>
-    <span class="source-tag">🏛 House Clerk</span>
+    <span class="source-tag">🏛 House Clerk XML</span>
     <span class="source-tag">📈 SEC EDGAR Form 4</span>
     <span class="source-tag">🔑 Congress.gov API</span>
     <span class="source-tag">📊 Financial Modeling Prep</span>
@@ -168,7 +185,7 @@
 </footer>
 
 <script>
-let allTrades = [], sortKey = 'daysToDisclose', sortDir = -1;
+let allTrades = [], sortKey = 'daysToDisclose', sortDir = -1, currentDays = 30;
 
 const COMMITTEE_SECTORS = {
   'armed services':['Aerospace & Defense','Defense'],
@@ -188,216 +205,192 @@ const COMMITTEE_SECTORS = {
 };
 
 function getOverlap(committee, sector) {
-  if (!committee || !sector) return { level:'none', reason:'No committee data' };
+  if (!committee||!sector) return {level:'none',reason:'No committee data'};
   const c = committee.toLowerCase();
   let matched = [];
   for (const [k,v] of Object.entries(COMMITTEE_SECTORS)) {
-    if (c.includes(k)) { matched = v; break; }
+    if (c.includes(k)){matched=v;break;}
   }
-  if (!matched.length) return { level:'none', reason:'No known overlap' };
+  if (!matched.length) return {level:'none',reason:'No known overlap'};
   const s = sector.toLowerCase();
-  if (matched.some(m => s.includes(m.toLowerCase()) || m.toLowerCase().includes(s))) {
-    return { level:'direct', reason:`Committee oversees ${sector}` };
-  }
-  return { level:'possible', reason:'Related to committee scope' };
+  if (matched.some(m=>s.includes(m.toLowerCase())||m.toLowerCase().includes(s)))
+    return {level:'direct',reason:`Committee oversees ${sector}`};
+  return {level:'possible',reason:'Related to committee scope'};
 }
 
-function fmtAmt(min, max) {
-  const f = n => n>=1e6?'$'+(n/1e6).toFixed(1)+'M':n>=1000?'$'+Math.round(n/1000)+'K':'$'+n;
+function setRange(days, btn) {
+  currentDays = days;
+  document.querySelectorAll('.range-btn').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  init();
+}
+
+function fmtAmt(min,max){
+  const f=n=>n>=1e6?'$'+(n/1e6).toFixed(1)+'M':n>=1000?'$'+Math.round(n/1000)+'K':'$'+n;
   return min===max?f(min):f(min)+'–'+f(max);
 }
-
-function scaleInfo(t) {
-  const mid = (t.amountMin+t.amountMax)/2;
-  const avg = ((t.historicalAvgMin||1000)+(t.historicalAvgMax||15000))/2;
-  const mult = avg>0?mid/avg:1;
+function scaleInfo(t){
+  const mid=(t.amountMin+t.amountMax)/2;
+  const avg=((t.historicalAvgMin||1000)+(t.historicalAvgMax||15000))/2;
+  const mult=avg>0?mid/avg:1;
   let label,cls,fillColor;
-  if (mult<1.5){label='Typical';cls='b-typical';fillColor='#3dd68c';}
-  else if (mult<3){label='Large';cls='b-large';fillColor='#f0a86b';}
+  if(mult<1.5){label='Typical';cls='b-typical';fillColor='#3dd68c';}
+  else if(mult<3){label='Large';cls='b-large';fillColor='#f0a86b';}
   else{label='Unusually large';cls='b-huge';fillColor='#f06b6b';}
   return{mult:parseFloat(mult.toFixed(1)),label,cls,fillColor,pct:Math.min(100,Math.round((mult/5)*100))};
 }
-
-function daysClass(d) {
-  if (d===null) return 'days-ok';
-  if (d<=14) return 'days-ok';
-  if (d<=30) return 'days-warn';
+function daysClass(d){
+  if(d===null)return 'days-ok';
+  if(d<=14)return 'days-ok';
+  if(d<=30)return 'days-warn';
   return 'days-bad';
 }
 
-function renderRows(trades) {
-  const tbody = document.getElementById('tbody');
-  if (!trades.length) {
-    tbody.innerHTML='<tr><td colspan="8"><div class="loading-state">No trades match the current filters.</div></td></tr>';
+function renderRows(trades){
+  const tbody=document.getElementById('tbody');
+  if(!trades.length){
+    tbody.innerHTML='<tr><td colspan="8"><div class="loading-state">No trades match the current filters.<br><span style="font-size:12px;margin-top:8px;display:block">Try widening the date range above.</span></div></td></tr>';
     return;
   }
-  tbody.innerHTML = trades.map(t => {
-    const sc = scaleInfo(t);
-    const dc = daysClass(t.daysToDisclose);
-    const ins = t._insider;
+  tbody.innerHTML=trades.map(t=>{
+    const sc=scaleInfo(t);
+    const dc=daysClass(t.daysToDisclose);
+    const ins=t._insider;
     let insHtml;
-    if (!ins) insHtml='<span class="insider-pending">Checking EDGAR…</span>';
-    else if (ins.found && ins.insiders && ins.insiders.length) {
-      const top = ins.insiders[0];
+    if(!ins)insHtml='<span class="insider-pending">Checking EDGAR…</span>';
+    else if(ins.found&&ins.insiders&&ins.insiders.length){
+      const top=ins.insiders[0];
       insHtml=`<div class="insider-hit">⚠ ${top.action}</div><div class="sub">${top.name}<br>${top.date}</div>`;
-    } else insHtml='<span class="insider-clear">✓ No match</span>';
-
-    const ov = t._overlap||{level:'none',reason:'Loading…'};
-    const ovClass = ov.level==='direct'?'b-overlap-direct':ov.level==='possible'?'b-overlap-possible':'b-overlap-none';
-    const ovLabel = ov.level==='direct'?'⚠ Direct':ov.level==='possible'?'~ Possible':'✓ None';
-
+    }else insHtml='<span class="insider-clear">✓ No match</span>';
+    const ov=t._overlap||{level:'none',reason:'Loading…'};
+    const ovClass=ov.level==='direct'?'b-overlap-direct':ov.level==='possible'?'b-overlap-possible':'b-overlap-none';
+    const ovLabel=ov.level==='direct'?'⚠ Direct':ov.level==='possible'?'~ Possible':'✓ None';
     return `<tr>
-      <td>
-        <div class="nm">${t.name}</div>
-        <div class="sub">${t.chamber} · ${t.party||'?'} · ${t.state||''}</div>
-        ${t.committee?`<div class="committee">${t.committee}</div>`:''}
-      </td>
-      <td>
-        <div class="ticker">${t.ticker}</div>
-        <div class="co-name">${t.company||''}</div>
-        ${t._info?`<div class="co-sector">${t._info.sector||''}${t._info.industry?' · '+t._info.industry:''}</div>`:''}
-        ${t._info&&t._info.description?`<div class="co-desc">${t._info.description}</div>`:''}
-      </td>
+      <td><div class="nm">${t.name}</div><div class="sub">${t.chamber}·${t.party||'?'}·${t.state||''}</div>${t.committee?`<div class="committee">${t.committee}</div>`:''}</td>
+      <td><div class="ticker">${t.ticker}</div><div class="co-name">${t.company||''}</div>${t._info?`<div class="co-sector">${t._info.sector||''}${t._info.industry?' · '+t._info.industry:''}</div>`:''}${t._info&&t._info.description?`<div class="co-desc">${t._info.description}</div>`:''}</td>
       <td><span class="badge ${t.tradeType==='purchase'?'b-buy':'b-sell'}">${t.tradeType==='purchase'?'▲ Buy':'▼ Sell'}</span></td>
       <td><div class="amount">${fmtAmt(t.amountMin,t.amountMax)}</div></td>
-      <td>
-        <span class="badge ${sc.cls}">${sc.label}</span>
-        <div class="scale-bar"><div class="scale-fill" style="width:${sc.pct}%;background:${sc.fillColor}"></div></div>
-        <div class="mult">${sc.mult}× avg</div>
-      </td>
-      <td>
-        <div class="${dc}">${t.daysToDisclose!==null?t.daysToDisclose+'d':'—'}</div>
-        <div class="sub">${t.tradeDate||''}<br>→ ${t.disclosedDate||''}</div>
-        ${t.daysToDisclose!==null&&t.daysToDisclose>30?'<div class="sub" style="color:var(--red);margin-top:2px">Near 45d limit</div>':''}
-      </td>
-      <td>
-        <span class="badge ${ovClass}">${ovLabel}</span>
-        <div class="overlap-reason">${ov.reason}</div>
-      </td>
+      <td><span class="badge ${sc.cls}">${sc.label}</span><div class="scale-bar"><div class="scale-fill" style="width:${sc.pct}%;background:${sc.fillColor}"></div></div><div class="mult">${sc.mult}× avg</div></td>
+      <td><div class="${dc}">${t.daysToDisclose!==null?t.daysToDisclose+'d':'—'}</div><div class="sub">${t.tradeDate||''}<br>→ ${t.disclosedDate||''}</div>${t.daysToDisclose!==null&&t.daysToDisclose>30?'<div class="sub" style="color:var(--red);margin-top:2px">Near 45d limit</div>':''}</td>
+      <td><span class="badge ${ovClass}">${ovLabel}</span><div class="overlap-reason">${ov.reason}</div></td>
       <td>${insHtml}</td>
     </tr>`;
   }).join('');
 }
 
-function populateSectors() {
-  const sectors = [...new Set(allTrades.map(t=>t._info&&t._info.sector).filter(Boolean))].sort();
-  const sel = document.getElementById('f-sector');
-  sel.innerHTML = '<option value="">All sectors</option>'+sectors.map(s=>`<option value="${s}">${s}</option>`).join('');
+function populateSectors(){
+  const sectors=[...new Set(allTrades.map(t=>t._info&&t._info.sector).filter(Boolean))].sort();
+  const sel=document.getElementById('f-sector');
+  sel.innerHTML='<option value="">All sectors</option>'+sectors.map(s=>`<option value="${s}">${s}</option>`).join('');
 }
 
-function updateStats() {
-  document.getElementById('s-total').textContent = allTrades.length;
-  document.getElementById('s-buys').textContent = allTrades.filter(t=>t.tradeType==='purchase').length;
-  document.getElementById('s-sells').textContent = allTrades.filter(t=>t.tradeType==='sale').length;
-  document.getElementById('s-ins').textContent = allTrades.filter(t=>t._insider&&t._insider.found).length;
-  document.getElementById('s-overlap').textContent = allTrades.filter(t=>t._overlap&&t._overlap.level==='direct').length;
-  const hi = allTrades.filter(t=>t._insider&&t._insider.found&&t._overlap&&t._overlap.level==='direct'&&scaleInfo(t).mult>=2);
-  document.getElementById('s-hi').textContent = hi.length;
-  const area = document.getElementById('alert-area');
-  area.innerHTML = hi.length
-    ? `<div class="alert-banner">⚠ <div><strong>${hi.length} high-concern trade${hi.length>1?'s':''}</strong> — direct committee overlap + insider match + large amount. <span class="alert-link" onclick="document.getElementById('f-flag').value='high';applyFilters()">Show only →</span></div></div>`
-    : '';
+function updateStats(){
+  document.getElementById('s-total').textContent=allTrades.length;
+  document.getElementById('s-buys').textContent=allTrades.filter(t=>t.tradeType==='purchase').length;
+  document.getElementById('s-sells').textContent=allTrades.filter(t=>t.tradeType==='sale').length;
+  document.getElementById('s-ins').textContent=allTrades.filter(t=>t._insider&&t._insider.found).length;
+  document.getElementById('s-overlap').textContent=allTrades.filter(t=>t._overlap&&t._overlap.level==='direct').length;
+  const hi=allTrades.filter(t=>t._insider&&t._insider.found&&t._overlap&&t._overlap.level==='direct'&&scaleInfo(t).mult>=2);
+  document.getElementById('s-hi').textContent=hi.length;
+  const area=document.getElementById('alert-area');
+  area.innerHTML=hi.length?`<div class="alert-banner">⚠ <div><strong>${hi.length} high-concern trade${hi.length>1?'s':''}</strong> — direct committee overlap + insider match + large amount. <span class="alert-link" onclick="document.getElementById('f-flag').value='high';applyFilters()">Show only →</span></div></div>`:'';
 }
 
-function applyFilters() {
-  const srch = document.getElementById('srch').value.toLowerCase();
-  const party = document.getElementById('f-party').value;
-  const type = document.getElementById('f-type').value;
-  const flag = document.getElementById('f-flag').value;
-  const chamber = document.getElementById('f-chamber').value;
-  const sector = document.getElementById('f-sector').value;
-  const overlap = document.getElementById('f-overlap').value;
-
-  let filtered = allTrades.filter(t => {
-    if (srch && !(t.name||'').toLowerCase().includes(srch)
-      && !(t.ticker||'').toLowerCase().includes(srch)
-      && !(t.company||'').toLowerCase().includes(srch)
-      && !(t._info&&(t._info.sector||'').toLowerCase().includes(srch))
-      && !(t._info&&(t._info.industry||'').toLowerCase().includes(srch))
-      && !(t.committee||'').toLowerCase().includes(srch)) return false;
-    if (party && !(t.party||'').includes(party)) return false;
-    if (type && t.tradeType!==type) return false;
-    if (chamber && t.chamber!==chamber) return false;
-    if (sector && !(t._info&&t._info.sector===sector)) return false;
-    if (overlap && !(t._overlap&&t._overlap.level===overlap)) return false;
-    if (flag==='insider' && !(t._insider&&t._insider.found)) return false;
-    if (flag==='high' && !(t._insider&&t._insider.found&&t._overlap&&t._overlap.level==='direct'&&scaleInfo(t).mult>=2)) return false;
+function applyFilters(){
+  const srch=document.getElementById('srch').value.toLowerCase();
+  const party=document.getElementById('f-party').value;
+  const type=document.getElementById('f-type').value;
+  const flag=document.getElementById('f-flag').value;
+  const chamber=document.getElementById('f-chamber').value;
+  const sector=document.getElementById('f-sector').value;
+  const overlap=document.getElementById('f-overlap').value;
+  let filtered=allTrades.filter(t=>{
+    if(srch&&!(t.name||'').toLowerCase().includes(srch)&&!(t.ticker||'').toLowerCase().includes(srch)&&!(t.company||'').toLowerCase().includes(srch)&&!(t._info&&(t._info.sector||'').toLowerCase().includes(srch))&&!(t._info&&(t._info.industry||'').toLowerCase().includes(srch))&&!(t.committee||'').toLowerCase().includes(srch))return false;
+    if(party&&!(t.party||'').includes(party))return false;
+    if(type&&t.tradeType!==type)return false;
+    if(chamber&&t.chamber!==chamber)return false;
+    if(sector&&!(t._info&&t._info.sector===sector))return false;
+    if(overlap&&!(t._overlap&&t._overlap.level===overlap))return false;
+    if(flag==='insider'&&!(t._insider&&t._insider.found))return false;
+    if(flag==='high'&&!(t._insider&&t._insider.found&&t._overlap&&t._overlap.level==='direct'&&scaleInfo(t).mult>=2))return false;
     return true;
   });
-
-  filtered.sort((a,b) => {
-    let av=a[sortKey]??0, bv=b[sortKey]??0;
-    if (sortKey==='mult'){av=scaleInfo(a).mult;bv=scaleInfo(b).mult;}
-    if (typeof av==='string') return av.localeCompare(bv)*sortDir;
-    return (av-bv)*sortDir;
+  filtered.sort((a,b)=>{
+    let av=a[sortKey]??0,bv=b[sortKey]??0;
+    if(sortKey==='mult'){av=scaleInfo(a).mult;bv=scaleInfo(b).mult;}
+    if(typeof av==='string')return av.localeCompare(bv)*sortDir;
+    return(av-bv)*sortDir;
   });
-
   renderRows(filtered);
 }
 
-function sortBy(key) {
+function sortBy(key){
   sortKey===key?sortDir*=-1:(sortKey=key,sortDir=-1);
   applyFilters();
 }
 
-function setStatus(state, text) {
+function setStatus(state,text){
   document.getElementById('status-dot').className='dot '+state;
   document.getElementById('status-text').textContent=text;
 }
 
-async function api(path) {
-  const r = await fetch(path);
-  if (!r.ok) throw new Error(`${path} returned ${r.status}`);
-  return r.json();
-}
-
-async function init() {
-  setStatus('loading','Fetching live data…');
-  document.getElementById('tbody').innerHTML='<tr><td colspan="8"><div class="loading-state"><div class="spinner"></div>Connecting to Senate EFDS…</div></td></tr>';
+async function init(){
+  setStatus('loading','Fetching…');
+  document.getElementById('tbody').innerHTML='<tr><td colspan="8"><div class="loading-state"><div class="spinner"></div>Loading trades…</div></td></tr>';
+  document.getElementById('cache-notice').style.display='none';
   document.getElementById('alert-area').innerHTML='';
   allTrades=[];
 
-  try {
-    const { trades } = await api('/api/trades');
-    allTrades = trades.map(t=>({...t,historicalAvgMin:1000,historicalAvgMax:15000,_insider:null,_info:null,_overlap:null}));
+  try{
+    const r=await fetch(`/api/trades?days=${currentDays}`);
+    if(!r.ok)throw new Error(`/api/trades returned ${r.status}`);
+    const{trades,fromCache,fetchedAt,cacheAgeHours}=await r.json();
+
+    allTrades=trades.map(t=>({...t,historicalAvgMin:1000,historicalAvgMax:15000,_insider:null,_info:null,_overlap:null}));
     applyFilters();
     updateStats();
-    setStatus('live','Live · Updated '+new Date().toLocaleTimeString());
 
-    for (let i=0; i<allTrades.length; i++) {
-      const t = allTrades[i];
+    if(fromCache){
+      setStatus('cached','Cached data');
+      const notice=document.getElementById('cache-notice');
+      notice.style.display='flex';
+      document.getElementById('cache-age').textContent=fetchedAt?new Date(fetchedAt).toLocaleString():'unknown';
+    }else{
+      setStatus('live','Live · '+new Date().toLocaleTimeString());
+    }
 
-      api(`/api/member?name=${encodeURIComponent(t.name)}`).then(({member})=>{
-        if (member) {
-          allTrades[i].party = member.partyName?member.partyName[0]:'?';
-          allTrades[i].state = member.state||allTrades[i].state;
-          if (member.terms&&member.terms.item&&member.terms.item.length) {
-            const lat = member.terms.item[member.terms.item.length-1];
-            allTrades[i].committee = lat.chamber||'';
+    for(let i=0;i<allTrades.length;i++){
+      const t=allTrades[i];
+      fetch(`/api/member?name=${encodeURIComponent(t.name)}`).then(r=>r.json()).then(({member})=>{
+        if(member){
+          allTrades[i].party=member.partyName?member.partyName[0]:'?';
+          allTrades[i].state=member.state||allTrades[i].state;
+          if(member.terms&&member.terms.item&&member.terms.item.length){
+            const lat=member.terms.item[member.terms.item.length-1];
+            allTrades[i].committee=lat.chamber||'';
           }
         }
-        allTrades[i]._overlap = getOverlap(allTrades[i].committee, allTrades[i]._info?.sector||'');
-        applyFilters(); updateStats();
+        allTrades[i]._overlap=getOverlap(allTrades[i].committee,allTrades[i]._info?.sector||'');
+        applyFilters();updateStats();
       }).catch(()=>{});
 
-      if (t.ticker && t.ticker!=='N/A') {
-        api(`/api/ticker?ticker=${encodeURIComponent(t.ticker)}`).then(({info})=>{
-          allTrades[i]._info = info;
-          allTrades[i]._overlap = getOverlap(allTrades[i].committee, info?.sector||'');
-          populateSectors(); applyFilters(); updateStats();
+      if(t.ticker&&t.ticker!=='N/A'){
+        fetch(`/api/ticker?ticker=${encodeURIComponent(t.ticker)}`).then(r=>r.json()).then(({info})=>{
+          allTrades[i]._info=info;
+          allTrades[i]._overlap=getOverlap(allTrades[i].committee,info?.sector||'');
+          populateSectors();applyFilters();updateStats();
         }).catch(()=>{});
-
-        api(`/api/insider?ticker=${encodeURIComponent(t.ticker)}&date=${encodeURIComponent(t.tradeDate||new Date().toISOString().split('T')[0])}`).then(data=>{
-          allTrades[i]._insider = data;
-          applyFilters(); updateStats();
-        }).catch(()=>{ allTrades[i]._insider={found:false,insiders:[]}; });
-      } else {
-        allTrades[i]._insider = {found:false,insiders:[]};
-        allTrades[i]._overlap = {level:'none',reason:'No ticker'};
+        fetch(`/api/insider?ticker=${encodeURIComponent(t.ticker)}&date=${encodeURIComponent(t.tradeDate||new Date().toISOString().split('T')[0])}`).then(r=>r.json()).then(data=>{
+          allTrades[i]._insider=data;
+          applyFilters();updateStats();
+        }).catch(()=>{allTrades[i]._insider={found:false,insiders:[]};});
+      }else{
+        allTrades[i]._insider={found:false,insiders:[]};
+        allTrades[i]._overlap={level:'none',reason:'No ticker'};
       }
     }
-  } catch(e) {
-    setStatus('error','Error loading data');
+  }catch(e){
+    setStatus('error','Error');
     document.getElementById('tbody').innerHTML=`<tr><td colspan="8"><div class="error-state">⚠ Could not load trade data<br><small style="color:var(--muted)">${e.message}</small><br><br><button class="btn" onclick="init()">↻ Try again</button></div></td></tr>`;
   }
 }
